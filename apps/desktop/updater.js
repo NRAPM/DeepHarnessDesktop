@@ -346,7 +346,12 @@ async function devPullUpdate() {
   log(`[updater] dev mode: git pull --ff-only in ${repoRoot}`)
   try {
     const { stdout, stderr } = await new Promise((resolve, reject) => {
-      execFile('git', ['pull', '--ff-only'], { cwd: repoRoot, timeout: 120000 }, (error, out, err) => {
+      execFile('git', ['pull', '--ff-only'], {
+        cwd: repoRoot,
+        timeout: 120000,
+        // shell on Windows: git resolves through git.cmd.
+        shell: process.platform === 'win32',
+      }, (error, out, err) => {
         if (error !== null) reject(error)
         else resolve({ stdout: out, stderr: err })
       })

@@ -34,9 +34,12 @@ if (!existsSync(builtEntry)) {
 
 mkdirSync(dirname(target), { recursive: true })
 console.log(`[stage-cli] deploying @deepseek-ai/dsh into ${target}`)
+// shell on Windows: pnpm resolves through pnpm.cmd, which Node cannot spawn
+// directly without a shell.
 execFileSync('pnpm', ['--filter', '@deepseek-ai/dsh', 'deploy', '--legacy', target], {
   cwd: root,
   stdio: 'inherit',
+  shell: process.platform === 'win32',
 })
 
 // The deployed package itself lives at the TARGET ROOT (its own lib/,
