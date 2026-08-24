@@ -59,7 +59,7 @@ function cliLaunch() {
   }
   return {
     executable: process.execPath,
-    args: [path.join(process.resourcesPath, 'cli', 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js')],
+    args: [path.join(process.resourcesPath, 'cli', 'lib', 'bin.js')],
     cwd: path.join(process.resourcesPath, 'cli'),
     env: { ELECTRON_RUN_AS_NODE: '1' },
   }

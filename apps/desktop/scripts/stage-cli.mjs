@@ -5,10 +5,14 @@
  *
  * Prerequisite: `pnpm build` at the repository root (builds every package's
  * lib/ output and the web frontend dist/). This script then runs
- * `pnpm --filter @deepseek-ai/dsh deploy <target>`, which copies the CLI
- * package plus its production dependencies into a self-contained node_modules
- * tree. The packaged Electron app spawns that staged entry with
- * ELECTRON_RUN_AS_NODE=1.
+ * `pnpm --filter @deepseek-ai/dsh deploy --legacy <target>`, which copies the
+ * CLI package plus its production dependencies into a self-contained
+ * node_modules tree. Workspace packages are packed fresh from the current
+ * files, so the staged lib/bin.js is the freshly built CLI bundle. The
+ * packaged Electron app spawns that staged entry with ELECTRON_RUN_AS_NODE=1.
+ *
+ * --legacy: pnpm 10+ refuses `deploy` unless the workspace sets
+ * inject-workspace-packages; this workspace uses classic non-injected links.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -30,14 +34,14 @@ if (!existsSync(builtEntry)) {
 
 mkdirSync(dirname(target), { recursive: true })
 console.log(`[stage-cli] deploying @deepseek-ai/dsh into ${target}`)
-// --legacy: pnpm 10+ refuses `deploy` unless the workspace sets
-// inject-workspace-packages; this workspace uses classic non-injected links.
 execFileSync('pnpm', ['--filter', '@deepseek-ai/dsh', 'deploy', '--legacy', target], {
   cwd: root,
   stdio: 'inherit',
 })
 
-const stagedEntry = join(target, 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js')
+// The deployed package itself lives at the TARGET ROOT (its own lib/,
+// package.json, config/), while its dependencies sit under node_modules/.
+const stagedEntry = join(target, 'lib', 'bin.js')
 if (!existsSync(stagedEntry)) {
   console.error(`[stage-cli] expected ${stagedEntry} after deploy — inspect the output above.`)
   process.exit(1)
