@@ -39,7 +39,10 @@
     "appId": "ai.deepseek.harness.desktop",
     "productName": "DeepSeek Harness",
     "files": [
-      "main.js"
+      "main.js",
+      "updater.js",
+      "preload.js",
+      "node_modules/**/*"
     ],
     "extraResources": [
       {
