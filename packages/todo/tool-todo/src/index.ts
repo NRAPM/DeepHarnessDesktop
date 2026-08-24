@@ -43,27 +43,23 @@ export const Config: z<Config> = z.object({
 })
 
 const DESCRIPTION_HEAD =
-  'Record and update a structured task list for the current work. Send the ENTIRE '
-  + 'list every call — it REPLACES the previous list (there are no partial updates, '
-  + 'no per-item edits). Use it to plan multi-step work and show progress: add one '
-  + 'todo per concrete step before you start. '
+  'Maintain structured task list. Each call sends ENTIRE list — REPLACES previous '
+  + '(no partial updates/per-item edits). Plan multi-step work: add one todo per step '
+  + 'before starting. '
 
 const DESCRIPTION_PARALLEL =
-  'Mark every todo being actively worked '
-  + 'on `in_progress` — several at once when work genuinely runs in parallel (e.g. '
-  + 'concurrent subagents or background commands), one for sequential work; while '
-  + 'work remains, at least one task should be `in_progress`. '
+  'Mark all active todos `in_progress` — several at once when work genuinely runs in parallel '
+  + '(e.g. concurrent subagents or background commands), one for sequential; while work remains '
+  + 'keep >=1 `in_progress`. '
 
 const DESCRIPTION_SINGLE =
-  'Keep AT MOST ONE todo `in_progress` at a '
-  + 'time; while work remains, exactly one active task should be `in_progress`. '
+  'Keep AT MOST ONE todo `in_progress` at a time; while work remains exactly one is '
+  + '`in_progress`. '
 
 const DESCRIPTION_TAIL =
-  'Mark a todo '
-  + '`completed` the moment it is done (do not batch completions), and allow no '
-  + '`in_progress` item only once all work is complete. Skip the list for trivial '
-  + 'single-step tasks. Statuses: `pending` (not started), `in_progress` (being '
-  + 'worked on now), `completed` (finished).'
+  'Mark `completed` when done (no batching); allow no `in_progress` only when all '
+  + 'work complete. Skip trivial single-step tasks. Statuses: `pending` '
+  + '(not started), `in_progress` (active), `completed` (finished).'
 
 /**
  * The model-facing description for one activation. The active-status clause is the only part that

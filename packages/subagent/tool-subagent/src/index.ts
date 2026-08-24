@@ -221,26 +221,22 @@ function providerWording(inheritsConversation: boolean): { description: string; 
   if (inheritsConversation) {
     return {
       description:
-        'Delegate a task to a subagent that inherits this conversation: a child agent seeded with all '
-        + 'completed turns so far (it does not see the current in-flight turn). Use this when the subtask '
-        + 'builds on this conversation\'s context — a follow-up analysis, '
-        + 'a review, a continuation — without consuming this conversation\'s context for the work itself. '
-        + 'You receive its result, not its intermediate steps.',
+        'Delegate to a subagent that inherits this conversation: child seeded with completed turns '
+        + '(not current in-flight turn). Use when subtask builds on this conversation — follow-up analysis, '
+        + 'review, continuation — without consuming this conversation\'s context. '
+        + 'Returns result, not intermediate steps.',
       promptDescription:
-        'The task for the subagent. It already sees this conversation\'s completed turns, so build on them '
-        + 'freely and state only what is new.',
+        'Task for the subagent. Already sees completed turns — build on them, state only what is new.',
     }
   }
   return {
     description:
-      'Delegate a self-contained task to a subagent (a separate agent that works in its own context) '
-      + 'to offload focused, independent work — research, a scoped '
-      + 'implementation, an analysis — so it does not consume this conversation\'s context. The subagent '
-      + 'returns its result, not its intermediate steps. Give it a '
-      + 'complete, standalone prompt: it does not see this conversation.',
+      'Delegate self-contained task to subagent (separate agent, own context) '
+      + 'for independent work — research, scoped implementation, analysis — without consuming this '
+      + 'conversation\'s context. Returns result, not intermediate steps. Give '
+      + 'complete standalone prompt: it does not see this conversation.',
     promptDescription:
-      'The complete, self-contained task for the subagent. It does not share this '
-      + 'conversation\'s context, so include everything it needs.',
+      'Complete self-contained task for subagent. Does not see this conversation — include everything it needs.',
   }
 }
 
@@ -470,7 +466,7 @@ export function apply(ctx: Context, config: Config): void {
       order: SUBAGENT_SECTION_ORDER,
       text: context => disposeTool === undefined || ctx.tools.get(toolName, context.scope) === undefined
         ? ''
-        : `Use ${toolName} in the background by default. Start independent delegations together in one assistant message and continue useful work while they run. Set \`run_in_background: false\` only when your next action depends on that subagent's result. When a background run settles, the runtime sends you a notice containing its outcome and any final assistant message.`,
+        : `Use ${toolName} in the background by default. Start independent delegations together in one message and keep working while they run. Set \`run_in_background: false\` only when next action needs result. When a background run settles, the runtime sends you a notice containing its outcome and any final assistant message.`,
     })
   }
 }

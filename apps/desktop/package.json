@@ -1,0 +1,73 @@
+{
+  "name": "@deepseek-ai/dsh-desktop",
+  "description": "Portable Electron desktop shell for the DeepSeek Harness web UI: boots the dsh web profile in a child process and shows it in a desktop window. All harness data lives in a portable data/ folder next to the app.",
+  "version": "0.1.1-rc.2",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "apps/desktop"
+  },
+  "main": "main.js",
+  "files": [
+    "main.js",
+    "updater.js",
+    "preload.js",
+    "node_modules/**/*"
+  ],
+  "scripts": {
+    "start": "electron .",
+    "start:no-sandbox": "electron . --no-sandbox",
+    "stage:cli": "node scripts/stage-cli.mjs",
+    "dist": "npm run stage:cli && electron-builder",
+    "dist:dir": "npm run stage:cli && electron-builder --dir"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "extract-zip": "^2.0.1"
+  },
+  "build": {
+    "appId": "ai.deepseek.harness.desktop",
+    "productName": "DeepSeek Harness",
+    "files": [
+      "main.js"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/cli",
+        "to": "cli"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "dir"
+      ],
+      "executableName": "dsh-desktop"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "dir"
+      ],
+      "category": "Development",
+      "executableName": "dsh-desktop"
+    },
+    "mac": {
+      "target": [
+        "dir"
+      ]
+    }
+  }
+}

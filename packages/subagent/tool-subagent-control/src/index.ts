@@ -26,11 +26,10 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'send_message',
     description:
-      'Send a message to a background subagent by its subagent id, continuing the same conversation. It '
-      + 'becomes the subagent\'s next turn: if it is still working, the message waits until its current turn '
-      + 'finishes, so it cannot redirect work already underway. This call returns no answer from the '
-      + 'subagent — only confirmation that the message was delivered — so use it to give it more work. A '
-      + 'failure means the message was NOT delivered.',
+      'Send message to background subagent by subagent id, continuing same conversation. It '
+      + 'becomes subagent\'s next turn: if still working, message waits until current turn '
+      + 'finishes, so cannot redirect work underway. Returns no answer — only delivery confirmation — use to give it more work. '
+      + 'Failure means message NOT delivered.',
     parameters: {
       subagent_id: {
         type: 'string',
@@ -79,12 +78,10 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'interrupt_agent',
     description:
-      'Request cancellation of a background agent\'s current turn by its agent id. The target may be your '
-      + 'direct child or a deeper agent created under you. Only the current turn stops: messages already '
-      + 'queued for the agent stay parked until a later send_message, agents it started keep running, and '
-      + 'the agent itself stays available for follow-ups. This call returns as soon as the stop request is '
-      + 'accepted, so the target may keep running briefly; interrupting an agent that already finished is '
-      + 'an accepted no-op.',
+      'Cancel background agent\'s current turn by agent id. Target may be direct child or deeper agent '
+      + 'under you. Only current turn stops: queued messages stay parked until later send_message, started agents keep running, and '
+      + 'agent stays available for follow-ups. Returns when stop accepted, so target may run briefly; interrupting finished agent is '
+      + 'accepted no-op.',
     parameters: {
       agent_id: {
         type: 'string',

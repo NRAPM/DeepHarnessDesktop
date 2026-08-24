@@ -176,12 +176,11 @@ for (let round = 1; round <= args.maxRounds; round += 1) {
 return { status: 'budget-limited', roundsStarted: args.maxRounds, report: previous }
 `
 
-const DESCRIPTION = 'Run a foreground fresh-agent Ralph loop toward one immutable objective. '
-  + 'Use only when the direct human explicitly asks for Ralph or fresh-agent iteration. Each round '
-  + 'opens a new child with no parent conversation or prior child session; the shared workspace is '
-  + 'long-term memory, and only a bounded structured report crosses rounds. The call returns when '
-  + 'a worker reports completion or a concrete blocker, or at the round limit. Ordinary long-running same-session work '
-  + 'belongs to goal tools.'
+const DESCRIPTION = 'Foreground fresh-agent Ralph loop: one immutable objective. '
+  + 'Only if direct human explicitly asks for Ralph/fresh-agent iteration. Each round starts new child '
+  + '(no parent conversation/prior session); workspace is long-term memory, only bounded structured report '
+  + 'crosses rounds. The call returns when a worker reports completion or a concrete blocker, '
+  + 'or at the round limit. Long-running same-session work -> goal tools.'
 
 /** Validate defaults even when a caller invokes apply() without Loader normalization. */
 function resolveConfig(config: Config): ResolvedConfig {
@@ -407,7 +406,7 @@ export function apply(ctx: Context, config: Config): void {
   ctx.systemPrompt.section({
     name: 'tool:ralph',
     order: 116,
-    text: 'Use the ralph tool ONLY when the direct human explicitly asks for a Ralph loop or fresh-agent iterative execution. Each Ralph round starts a fresh child with no conversation seed and uses the shared workspace as durable memory. Completion and blockers are worker reports, not independent evaluation. Use same-session goal tools for ordinary long-running objectives, and plain subagents or workflows for bounded delegation and fan-out.',
+    text: 'Use ralph ONLY when the direct human explicitly asks for a Ralph loop or fresh-agent iterative execution. Completion/blockers are worker reports, not independent evaluation. Use same-session goal tools for ordinary long-running work; plain subagents/workflows for bounded delegation/fan-out.',
   })
   ctx.tools.register(defineTool({
     name: 'ralph',

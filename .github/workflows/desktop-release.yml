@@ -1,0 +1,119 @@
+# Build the portable desktop app and attach it to the harness repo.
+#
+# Two triggers:
+# - every push to master  → uploads to a rolling "nightly" release, so the
+#   desktop app's Update button always tracks the latest master;
+# - every `dsh-v*` tag   → the same zips are attached to the tagged release
+#   (the same tags the npm release sequence uses).
+#
+# Each release carries one portable zip per OS with a stable name
+# (`dsh-desktop-<os>-<arch>.zip`) that the app's updater
+# (apps/desktop/updater.js) looks up by platform via Help → Update.
+#
+# workflow_dispatch is allowed for testing a release build from a branch; the
+# guard below creates the GitHub Release if the ref has none yet.
+name: Desktop release
+
+on:
+  push:
+    branches: [master]
+    tags: ['dsh-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PRIMARY_NODE_VERSION: '24'
+  DSH_TELEMETRY_DISABLED: '1'
+
+jobs:
+  desktop:
+    name: Build desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            asset: dsh-desktop-linux-x64.zip
+            unpacked: linux-unpacked
+            # GNU tar cannot write zip, so the runner installs `zip`.
+            zip-cmd: |
+              sudo apt-get update
+              sudo apt-get install -y zip
+              mkdir -p "$GITHUB_WORKSPACE/dist-desktop"
+              cd release/linux-unpacked
+              zip -qr "$GITHUB_WORKSPACE/dist-desktop/dsh-desktop-linux-x64.zip" .
+          - os: windows-2022
+            asset: dsh-desktop-win-x64.zip
+            unpacked: win-unpacked
+            # Windows tar is bsdtar: `-a` auto-detects the zip format.
+            zip-cmd: |
+              mkdir -p "$GITHUB_WORKSPACE/dist-desktop"
+              tar -a -cf "$GITHUB_WORKSPACE/dist-desktop/dsh-desktop-win-x64.zip" -C release/win-unpacked .
+          - os: macos-14
+            asset: dsh-desktop-mac-x64.zip
+            unpacked: mac
+            zip-cmd: |
+              mkdir -p "$GITHUB_WORKSPACE/dist-desktop"
+              cd release/mac
+              zip -qry "$GITHUB_WORKSPACE/dist-desktop/dsh-desktop-mac-x64.zip" .
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+
+      - name: Configure pnpm store path
+        id: pnpm-store
+        run: |
+          store_root="$HOME/.local/share/pnpm/store"
+          echo "PNPM_CONFIG_STORE_DIR=$store_root" >> "$GITHUB_ENV"
+          store_path=$(PNPM_CONFIG_STORE_DIR="$store_root" pnpm store path --silent)
+          echo "path=$store_path" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-node-${{ env.PRIMARY_NODE_VERSION }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ env.PRIMARY_NODE_VERSION }}-pnpm-
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build:official
+
+      - name: Build desktop app
+        run: pnpm --filter @deepseek-ai/dsh-desktop dist:dir
+
+      - name: Package portable zip
+        shell: bash
+        working-directory: apps/desktop
+        run: ${{ matrix.zip-cmd }}
+
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            REL="$GITHUB_REF_NAME"
+            gh release view "$REL" >/dev/null 2>&1 || gh release create "$REL" --generate-notes
+          else
+            REL="nightly"
+            gh release view "$REL" >/dev/null 2>&1 || \
+              gh release create "$REL" --title "Nightly desktop builds" \
+                --notes "Built automatically from the latest master push."
+          fi
+          gh release upload "$REL" "dist-desktop/${{ matrix.asset }}" --clobber

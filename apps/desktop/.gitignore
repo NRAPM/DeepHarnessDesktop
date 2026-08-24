@@ -1,0 +1,8 @@
+data/
+resources/cli/
+release/
+node_modules/
+dsh-update-next/
+dsh-update-old/
+.dsh-apply-update.sh
+.dsh-apply-update.cmd

@@ -41,11 +41,7 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'cordis_inspect_list',
     description:
-      'List every Cordis Inspect Provider currently known to the Host, including local Host Providers and the latest '
-      + 'manifests synchronized from the Client. Each entry includes its platform, purpose, read-only methods, and '
-      + 'input/output schemas. Call this Tool before creating or modifying a Package, then select the provider and '
-      + 'method for cordis_inspect_query from its result. Do not guess names or treat an Inspect method as a business '
-      + 'Service that Plugin code can call.',
+      'List Cordis Inspect Providers known to Host—local + latest Client-synced manifests. Each: platform, purpose, read-only methods, input/output schemas. Call before Package create/modify; pick provider/method for cordis_inspect_query from result. Never guess names or treat Inspect methods as Plugin-callable business Services.',
     parameters: {},
     output: {
       schema: { type: 'json' },
@@ -60,15 +56,7 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'cordis_inspect_query',
     description:
-      'Run a read-only query explicitly declared by an Inspect Provider. platform, provider, and method must come '
-      + 'from cordis_inspect_list, and input must satisfy that method\'s schema. Use this Tool before cordis_define '
-      + 'to read exact Service methods, Event modes, Builtin signatures, Tool schemas, theme tokens, or live Slot '
-      + 'trees and props. Host queries run locally. A Client query waits for the first valid page response and '
-      + 'remains pending until a page answers or the Tool is cancelled. This Tool cannot invoke business Service '
-      + 'methods or modify the runtime. For Service.listService and Event.listEvents, query without input to navigate '
-      + 'the compact signature directory, then query the exact service or event for its structured contract and '
-      + 'referenced types. For Slots.listSubTree, query without root to navigate the compact tree, then query the '
-      + 'exact root for its complete registration contract and props.',
+      'Run read-only Inspect Provider query. platform/provider/method from cordis_inspect_list; input must satisfy method schema. Use before cordis_define to read Service methods, Event modes, Builtin signatures, Tool schemas, theme tokens, Slot trees/props. Host local; Client waits for first valid page response, pending until answered/cancelled. Cannot invoke business Services or mutate runtime. Service.listService/Event.listEvents without input: browse compact signature directory, then exact service/event for contract+refs. Slots.listSubTree without root: browse compact tree, then exact root for full contract+props.',
     parameters: {
       platform: { type: 'string', required: true, enum: ['host', 'client'], description: 'Runtime platform that owns the Provider.' },
       provider: { type: 'string', required: true, description: 'Exact Provider ID returned by cordis_inspect_list.' },
@@ -96,12 +84,7 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'cordis_inspect_self',
     description:
-      'Inspect dynamic Cordis objects owned by the current Session at increasing levels of detail. With no IDs, '
-      + 'list only Plugin summaries. With pluginId alone, return version pointers, the latest Run, and every Package '
-      + 'summary. Only pluginId plus packageId returns that immutable Package\'s Host/Client source and runtime '
-      + 'diagnostics. packageId cannot be supplied alone. Query an exact Package before handling @pluginId, repairing '
-      + 'an asynchronous failure, or defining an updated version. This Tool is read-only: it neither executes code '
-      + 'nor changes version pointers.',
+      'Inspect Session-owned dynamic Cordis objects at increasing detail. No IDs→Plugin summaries. pluginId→version pointers, latest Run, all Package summaries. pluginId+packageId→immutable Package Host/Client source+diagnostics. packageId requires pluginId. Query exact Package before handling @pluginId, repairing async failure, or new version. Read-only: never executes/changes version pointers.',
     parameters: {
       pluginId: { type: 'string', description: 'Stable Plugin ID returned by cordis_define or injected by @pluginId; omit it to list every current Plugin.' },
       packageId: { type: 'string', description: 'Exact immutable Package ID owned by pluginId; when specified, source and diagnostics are returned.' },
@@ -148,14 +131,7 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'cordis_define',
     description:
-      'Define an immutable Cordis Package. For a new Plugin, use kind:"new" and provide only a semantic prefix of '
-      + '3–6 lowercase English letters; the Host returns the final pluginId and packageId. To modify an existing '
-      + 'Plugin, use kind:"existing" with its exact pluginId to append a Package without overwriting older versions. '
-      + 'Provide at least one of code.host and code.client. Each value is a plain JavaScript function body that returns '
-      + 'a Cordis Plugin; no TypeScript, JSX, or import transformation occurs. Query Inspect before depending on a '
-      + 'Service, Event, Builtin, Slot, or token. Define only validates parameters and syntax and records source: it '
-      + 'does not request approval, execute apply, or change currentPackageId. On success, call cordis_run with the '
-      + 'returned IDs.',
+      'Define immutable Cordis Package. New Plugin: kind:"new"+semantic prefix 3–6 lowercase English letters; Host returns final pluginId/packageId. Existing: kind:"existing"+exact pluginId to append Package without overwrite. Need ≥1 code.host/code.client — plain JS function body returning Cordis Plugin; no TS/JSX/import transform. Query Inspect before depending on Service/Event/Builtin/Slot/token. Validates params/syntax, records source only—no approval/apply/currentPackageId change. On success call cordis_run with returned IDs.',
     parameters: {
       plugin: {
         required: true,
@@ -240,15 +216,7 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'cordis_run',
     description:
-      'Activate one exact Package of a dynamic Plugin. Use mode:"run" for the first activation, restarting '
-      + 'currentPackageId, or rollback. When current exists, use mode:"update" to switch to a different Package, '
-      + 'even if the Plugin is currently stopped. An unauthorized Client Package creates an approval request and '
-      + 'returns awaiting-approval; an authorized Package returns starting and continues asynchronously in the '
-      + 'browser. Neither result waits for the final outcome inside the Tool. currentPackageId changes only after '
-      + 'complete success; on failure, the old current and target next remain. Asynchronous success, rejection, or '
-      + 'technical failure is reported through state and steering. After a technical failure, read diagnostics with '
-      + 'cordis_inspect_self, correct the same Plugin, and retry autonomously. Do not request approval again after '
-      + 'the user rejects it.',
+      'Activate exact Plugin Package. mode:"run" for first activation, restart currentPackageId, or rollback. mode:"update" to switch Package even if stopped (requires current). Unauthorized Client Package→approval request, returns awaiting-approval; authorized→starting, async in browser. Neither waits for final outcome. currentPackageId changes only on full success; on failure old current+target next remain. Async success/rejection/technical failure via state+steering. After technical failure read diagnostics via cordis_inspect_self, fix same Plugin, retry. Never re-request after rejection.',
     parameters: {
       pluginId: { type: 'string', required: true, description: 'Stable Plugin ID returned by cordis_define.' },
       packageId: { type: 'string', required: true, description: 'Exact immutable Package ID to activate under that Plugin.' },
@@ -329,10 +297,7 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'cordis_stop',
     description:
-      'Stop the current Run of a dynamic Plugin and cancel unfinished approval or activation requests. Retain the '
-      + 'Plugin, every immutable Package, grants, currentPackageId, and nextPackageId so it can later run or update '
-      + 'directly. Stopping an already stopped Plugin succeeds idempotently. Use this Tool to disable effects '
-      + 'temporarily; use cordis_undefine for permanent removal.',
+      'Stop dynamic Plugin current Run, cancel pending approval/activation. Retains Plugin, immutable Packages, grants, current/nextPackageId for later run/update. Already stopped→idempotent. Temporary disable→use this; permanent removal→use cordis_undefine.',
     parameters: {
       pluginId: { type: 'string', required: true, description: 'Stable dynamic Plugin ID to stop.' },
     },
@@ -351,11 +316,7 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'cordis_undefine',
     description:
-      'Permanently remove a dynamic Plugin owned by the current Session. If it is running or awaiting approval, '
-      + 'first stop it and cancel the request, then delete every Package, grant, and version pointer. After this '
-      + 'returns, its pluginId, packageIds, @ reference, and Package business views are invalid; historical cards '
-      + 'retain only a "Plugin removed" record. Do not call this Tool when versions must remain available for restart '
-      + 'or rollback; use cordis_stop instead.',
+      'Permanently remove Session-owned dynamic Plugin. If running/awaiting approval, first stops/cancels then deletes all Packages, grants, version pointers. Afterwards pluginId/packageIds/@ reference and business views invalid; history cards keep "Plugin removed" only. To keep versions for restart/rollback use cordis_stop.',
     parameters: {
       pluginId: { type: 'string', required: true, description: 'Stable dynamic Plugin ID to remove permanently.' },
     },

@@ -271,6 +271,11 @@
     - id: ui-model-selection
       name: '@deepseek-ai/dsh-client-ui-model-selection'
 
+    # Model select UI/UX improvement: provider-first picker + effort slider
+    # overriding the composer model seat (needs ui-model-selection above).
+    - id: model-select-uiux
+      name: 'model-select-uiux'
+
     - id: ui-permission
       name: '@deepseek-ai/dsh-client-ui-permission-presets'
 

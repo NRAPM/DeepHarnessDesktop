@@ -80,7 +80,7 @@ export function apply(ctx: Context, config: Config = {}): void {
 
   const skillTool = defineTool({
     name: 'skill',
-    description: 'Load the full instructions for an available skill. Call this with the exact skill name from the session skill catalog before acting on a task that names or clearly matches that skill.',
+    description: 'Load full instructions for an available skill. Call with exact skill name from session catalog before acting on task that names or clearly matches that skill.',
     parameters: {
       name: { type: 'string', required: true, description: 'The exact skill name from the available skills list.' },
     },
@@ -279,19 +279,19 @@ function renderCatalogMessage(entries: SkillCatalogSource['entries']): UserMessa
 function renderCatalogUpdate(entries: SkillCatalogSource['entries']): UserMessage {
   const availability = entries.length === 0
     ? [
-      'No skills are currently available through the `skill` tool. Do not use names from earlier skill catalogs.',
-      'A user may still invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` tool for it.',
+      'No skills are currently available via `skill` tool. Do not use names from earlier catalogs.',
+      'User may still invoke skill directly; its <skill_content> block appears here. Follow it and do not call `skill` for it.',
     ]
     : [
-      'Use only names in this replacement catalog. If the user names a listed skill, or the task clearly matches its description, call the `skill` tool with the exact name before acting.',
-      'A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` tool again for that skill.',
+      'Use only names in replacement catalog. If user names listed skill or task clearly matches description, call `skill` with exact name before acting.',
+      'User may also invoke skill directly; its <skill_content> block appears here. Follow it and do not call `skill` again for that skill.',
     ]
   return createUserMessage({
     content: [{
       type: 'text',
       text: [
         '<system-reminder>',
-        'The available skill catalog changed. This complete catalog replaces every earlier available-skills list in this session:',
+        'Available skill catalog changed. This complete catalog replaces all earlier lists in this session:',
         '',
         '<available_skills>',
         ...renderCatalogEntries(entries),

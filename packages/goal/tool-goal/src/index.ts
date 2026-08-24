@@ -43,15 +43,13 @@ type UpdateAction = 'edit' | 'pause' | 'resume' | 'complete' | 'blocked'
 const UPDATE_ACTIONS: UpdateAction[] = ['edit', 'pause', 'resume', 'complete', 'blocked']
 
 const CREATE_DESCRIPTION =
-  'Create one persisted same-session completion goal when the current direct human request '
-  + 'is a long-running objective that should continue across autonomous goal rounds. You may '
-  + 'infer that intent without requiring the user to say "create a goal". Do not use this for '
-  + 'trivial single-turn work. Execution rejects non-human and subagent authority.'
+  'Create persisted same-session completion goal for direct human long-running objective spanning autonomous goal rounds. '
+  + 'May infer intent without phrase "create a goal". Not for trivial single-turn work. '
+  + 'Rejects non-human/subagent authority.'
 
 const GET_DESCRIPTION =
-  'Read the current same-session goal, including its exact id/revision, objective, phase, completed '
-  + 'continuation rounds, round limit, blocker reason when present, and whether another continuation is armed. '
-  + 'Call this before updating a goal.'
+  'Read same-session goal: exact id/revision, objective, phase, completed continuation rounds, round limit, '
+  + 'blocker reason if any, continuation-armed flag. Call before update_goal.'
 
 /** Canonical goal-tool output, matching the existing compact Native JSON. */
 type GoalToolValue =
@@ -111,15 +109,12 @@ const GOAL_VALUE_SCHEMA = {
 
 /** Render policy guidance with its deployment-selected blocked threshold. */
 function guidance(blockedAfter: number): string {
-  return 'Use goal tools for one long-running completion objective in the current session. '
-    + 'create_goal may infer goal intent from a direct human request in any language; do not '
-    + 'create a goal for routine single-turn work. Call get_goal before update_goal and copy its '
-    + 'exact goal_id and revision. After session resume or fork, an active goal is disarmed: when '
-    + 'a human asks to continue or resume in any wording or language, use update_goal action '
-    + 'resume to rearm it. Mark complete only when the objective is actually achieved. Mark '
-    + `blocked only after the same blocking condition persists for at least ${blockedAfter} `
-    + 'consecutive goal rounds, and report that concrete condition in blocked_reason; difficulty, uncertainty, '
-    + 'or useful remaining work is not blocked.'
+  return 'Goal tools: one long-running completion objective per session. '
+    + 'create_goal may infer goal intent from a direct human request in any language; not for trivial '
+    + 'single-turn work. Call get_goal before update_goal; copy exact goal_id/revision. After '
+    + 'resume/fork active goal disarmed: human continue/resume (any wording/language) -> '
+    + `update_goal resume to rearm. Complete only when objective achieved. Blocked only after same blocking condition persists for at least ${blockedAfter} `
+    + 'consecutive goal rounds; report in blocked_reason; difficulty/uncertainty/remaining work is not blocked.'
 }
 
 /** Validate config even when apply is called directly outside Loader normalization. */
@@ -233,10 +228,9 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'update_goal',
-    description: 'Update the exact current goal revision. edit, pause, and resume require a direct '
-      + 'top-level human request. During an automatic continuation of the current goal, complete '
-      + 'and blocked are also allowed. blocked is rejected before the configured minimum round count; the model remains '
-      + 'responsible for judging that the same condition persisted across those rounds and must explain it in blocked_reason.',
+    description: 'Update exact current goal revision. edit/pause/resume need direct top-level human request; '
+      + 'complete/blocked also allowed during automatic continuation. blocked rejected before configured minimum rounds; '
+      + 'model must judge same condition persisted across those rounds and explain in blocked_reason.',
     parameters: {
       goal_id: { type: 'string', required: true, description: 'Exact id returned by get_goal.' },
       revision: { type: 'number', required: true, description: 'Exact positive revision returned by get_goal.' },

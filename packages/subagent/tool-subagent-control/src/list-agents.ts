@@ -92,17 +92,14 @@ export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'list_agents',
     description:
-      'List your continuable background subagents by durable id and label. Use it to recall which ones '
-      + 'you started, not to poll for completion — you are told when one finishes. Status comes from the live '
-      + 'registry: running means the agent is working right now, idle means it is loaded but between turns '
-      + '(it may be waiting on agents it started), and ready means it exists only in storage — resumable, not '
-      + 'terminal, and not a result waiting to be collected; a `send_message` starts a new turn on the same '
-      + 'conversation, and a direct child remains a `send_message` candidate in every status. The snapshot is not a delivery '
-      + 'promise — `send_message` performs the authoritative check and may still fail. Children that could '
-      + 'not be read are reported as diagnostics instead of being silently dropped. Scope `descendants` '
-      + 'walks the whole tree below you in stable pre-order, annotating each entry with its durable direct-parent '
-      + 'session id and depth. You may use `send_message` only for depth-1 entries; deeper entries are '
-      + 'candidates for `interrupt_agent` only.',
+      'List continuable background subagents by durable id and label. For recalling which you started, not '
+      + 'polling — you are told when one finishes. Status from live registry: running = working now, idle = loaded '
+      + 'between turns (may wait on its agents), ready = in storage only — resumable, not terminal, no result '
+      + 'to collect; `send_message` starts new turn on same conversation, direct children remain candidates in any '
+      + 'status. Snapshot not a delivery promise — `send_message` does authoritative check and may fail. Unreadable '
+      + 'children reported as diagnostics, not dropped. Scope `descendants` walks whole tree below you in stable '
+      + 'pre-order, annotating each entry with durable direct-parent session id and depth. `send_message` only for '
+      + 'depth-1 entries; deeper entries are `interrupt_agent` candidates only.',
     parameters: {
       scope: {
         type: 'string',

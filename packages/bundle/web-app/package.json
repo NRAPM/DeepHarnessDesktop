@@ -111,6 +111,7 @@
     "@deepseek-ai/dsh-subprocess": "workspace:^",
     "@deepseek-ai/dsh-workspace": "workspace:^",
     "@deepseek-ai/schemastery": "workspace:^",
+    "model-select-uiux": "workspace:^",
     "commander": "^15.0.0",
     "open": "^11.0.0"
   },

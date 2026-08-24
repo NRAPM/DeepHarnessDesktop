@@ -249,12 +249,12 @@ export function jsonSchemaToTs(schema: unknown, indent = 0): string {
 /** The fixed model-facing usage contract rendered above the declarations (see the Code Mode Agent Note's "What the model sees"). */
 const SDK_INSTRUCTIONS = `## Writing code for run_code
 
-\`run_code\` takes two required arguments: \`code\` — the body of an async TypeScript function (erasable syntax only — no \`enum\` or namespaces; type annotations are advisory, the code runs type-stripped) — and \`description\`, a short summary of what the program does. Inside the program:
+\`run_code\` takes two required arguments: \`code\` — the body of an async TypeScript function (erasable syntax only, no \`enum\` or namespaces; type annotations are advisory and stripped) — and \`description\`, a short summary of what the program does. Inside the program:
 
-- Call tools as \`await tools.name(args)\` — quoted access for exotic names: \`tools["my-tool"](args)\`. Every call resolves to the tool's typed canonical JSON value. Tool arguments must be lossless JSON.
-- A FAILED tool call rejects with \`ToolCallError\`, whose \`toolName\` identifies the failed tool and whose \`message\` is human-readable — \`try/catch\` it to handle and continue.
+- Call tools as \`await tools.name(args)\` (quote exotic names: \`tools["my-tool"](args)\`). Every call resolves to the tool's typed canonical JSON value; arguments must be lossless JSON.
+- A failed call rejects with \`ToolCallError\` — \`.toolName\` names the tool, \`.message\` is human-readable; \`try/catch\` to handle and continue.
 - Independent read-only calls MAY overlap under \`Promise.all\` (safe calls run concurrently; mutating calls run alone, in submission order). Sequence dependent work with \`await\`.
-- Emit results with \`return\` and/or \`console.log(...)\`. Only what you print or return is program output. A successful tool result containing an image is attached after the run so you can inspect it on the next step; every other intermediate result stays out of the conversation, so extract just what you need.
+- Emit results with \`return\` and/or \`console.log(...)\` — only what you print or return is program output. An image-bearing tool result is attached for you to inspect on the next step; every other intermediate result stays out of the conversation, so extract just what you need.
 
 The available tools:`
 
