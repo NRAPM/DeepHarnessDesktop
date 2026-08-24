@@ -30,7 +30,9 @@ if (!existsSync(builtEntry)) {
 
 mkdirSync(dirname(target), { recursive: true })
 console.log(`[stage-cli] deploying @deepseek-ai/dsh into ${target}`)
-execFileSync('pnpm', ['--filter', '@deepseek-ai/dsh', 'deploy', target], {
+// --legacy: pnpm 10+ refuses `deploy` unless the workspace sets
+// inject-workspace-packages; this workspace uses classic non-injected links.
+execFileSync('pnpm', ['--filter', '@deepseek-ai/dsh', 'deploy', '--legacy', target], {
   cwd: root,
   stdio: 'inherit',
 })
