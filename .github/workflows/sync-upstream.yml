@@ -1,0 +1,51 @@
+# Keep this repo in sync with the OFFICIAL DeepSeek Harness.
+#
+# Runs daily (and manually on demand): merges upstream/master
+# (deepseek-ai/deepseek-harness) into this repo's master. A successful merge
+# pushes, which triggers the Desktop release workflow — so every portable copy
+# of the app receives the official harness updates with one click.
+#
+# On merge conflicts the merge is aborted (nothing is lost, nothing is pushed)
+# and the conflict must be resolved by hand on a dev machine.
+
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # daily at 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Merge official master
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Merge upstream master
+        run: |
+          git remote add upstream https://github.com/deepseek-ai/deepseek-harness.git
+          git fetch upstream master --quiet
+          if git merge-base --is-ancestor upstream/master HEAD; then
+            echo "already up to date with upstream"
+          else
+            git merge upstream/master --no-edit \
+              || { echo "merge conflict — aborting (resolve manually on a dev machine)"; git merge --abort; exit 0; }
+          fi
+
+      - name: Push
+        run: |
+          if [ -n "$(git log origin/master..HEAD --oneline)" ]; then
+            git push origin master
+          else
+            echo "nothing new to push"
+          fi

@@ -24,6 +24,7 @@ const { app, BrowserWindow, dialog, ipcMain } = require('electron')
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
+const extractZip = require('extract-zip')
 const updater = require('./updater')
 
 const APP_NAME = 'DeepSeek Harness'
@@ -45,6 +46,41 @@ function portableRoot() {
 /** Where the harness keeps everything. Overridable for manual testing. */
 const DSH_HOME = process.env.DSH_HOME || path.join(portableRoot(), 'data')
 
+let packagedCliDir = null // set once in packaged mode by ensureStagedCli()
+
+/**
+ * Packaged mode: the harness ships as a single resources/cli.zip (a plain
+ * file — electron-builder strips node_modules from any DIRECTORY it copies as
+ * extraResources). Extract it next to the app on first run; re-extract when
+ * the zip is newer (e.g. after an update swapped the app folder).
+ */
+async function ensureStagedCli() {
+  const zipPath = path.join(process.resourcesPath, 'cli.zip')
+  const cliDir = path.join(portableRoot(), 'runtime', 'cli')
+  const marker = path.join(cliDir, '.extracted')
+  try {
+    const zipStat = fs.statSync(zipPath)
+    let markerMtime = 0
+    try { markerMtime = fs.statSync(marker).mtimeMs } catch { /* no marker yet */ }
+    if (fs.existsSync(path.join(cliDir, 'lib', 'bin.js')) && markerMtime >= zipStat.mtimeMs) {
+      return cliDir
+    }
+    fs.rmSync(cliDir, { recursive: true, force: true })
+    fs.mkdirSync(path.dirname(cliDir), { recursive: true })
+    log(`extracting ${zipPath} → ${cliDir}`)
+    await extractZip(zipPath, { dir: cliDir })
+    fs.writeFileSync(marker, String(zipStat.mtimeMs))
+    return cliDir
+  } catch (error) {
+    dialog.showErrorBox(
+      `${APP_NAME} — harness unpack failed`,
+      `${error instanceof Error ? error.message : String(error)}\n\n` +
+      `Expected ${zipPath} inside the app resources.`,
+    )
+    return null
+  }
+}
+
 /**
  * How to launch the harness CLI.
  * @returns {{ executable: string, args: string[], cwd: string, env?: Record<string, string> }}
@@ -59,8 +95,8 @@ function cliLaunch() {
   }
   return {
     executable: process.execPath,
-    args: [path.join(process.resourcesPath, 'cli', 'lib', 'bin.js')],
-    cwd: path.join(process.resourcesPath, 'cli'),
+    args: [path.join(packagedCliDir, 'lib', 'bin.js')],
+    cwd: packagedCliDir,
     env: { ELECTRON_RUN_AS_NODE: '1' },
   }
 }
@@ -244,6 +280,7 @@ if (!app.requestSingleInstanceLock()) {
     // missing line distinguishes "click never arrived" from "check failed".
     ipcMain.on('dsh-desktop:update-clicked', () => log('[updater] Update button clicked'))
     ipcMain.handle('dsh-desktop:update', () => updater.checkNow())
+    if (!DEV_MODE) packagedCliDir = await ensureStagedCli()
     const child = startHarness()
     try {
       const url = await awaitHarnessUrl(child, 30000)

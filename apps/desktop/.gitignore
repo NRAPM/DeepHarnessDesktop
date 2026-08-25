@@ -1,5 +1,6 @@
 data/
 resources/cli/
+resources/cli.zip
 release/
 node_modules/
 dsh-update-next/

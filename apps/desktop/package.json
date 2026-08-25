@@ -46,8 +46,8 @@
     ],
     "extraResources": [
       {
-        "from": "resources/cli",
-        "to": "cli"
+        "from": "resources/cli.zip",
+        "to": "cli.zip"
       }
     ],
     "directories": {

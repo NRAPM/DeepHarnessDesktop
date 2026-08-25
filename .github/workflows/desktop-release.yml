@@ -42,6 +42,8 @@ jobs:
             zip-cmd: |
               sudo apt-get update
               sudo apt-get install -y zip
+              cp scripts/start-linux.sh release/linux-unpacked/start.sh
+              chmod +x release/linux-unpacked/start.sh
               mkdir -p "$GITHUB_WORKSPACE/dist-desktop"
               cd release/linux-unpacked
               zip -qr "$GITHUB_WORKSPACE/dist-desktop/dsh-desktop-linux-x64.zip" .

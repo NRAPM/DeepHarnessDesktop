@@ -337,16 +337,32 @@ async function checkNow() {
   }
 }
 
-/** Dev mode: git pull --ff-only in the checkout, then restart the harness. */
+/** Dev mode: pull the latest official harness, then restart. */
 async function devPullUpdate() {
   if (repoRoot === null || restart === null) {
     log('[updater] dev mode but no git checkout/restart hook — falling back to release check')
     return { status: 'up-to-date' }
   }
-  log(`[updater] dev mode: git pull --ff-only in ${repoRoot}`)
+  log(`[updater] dev mode: git pull in ${repoRoot}`)
   try {
+    // Prefer the OFFICIAL harness repo (the "upstream" remote) so the dev
+    // machine tracks the latest real releases; fall back to origin (the
+    // user's own repo) when no upstream remote is configured.
+    let remotes = ''
+    try {
+      remotes = await new Promise((resolve, reject) => {
+        execFile('git', ['remote'], { cwd: repoRoot, shell: process.platform === 'win32' }, (error, out) => {
+          if (error !== null) reject(error)
+          else resolve(out)
+        })
+      })
+    } catch { /* remotes stays empty */ }
+    const hasUpstream = remotes.split(/\r?\n/).includes('upstream')
+    const args = hasUpstream
+      ? ['pull', 'upstream', 'master', '--no-edit']
+      : ['pull', '--ff-only']
     const { stdout, stderr } = await new Promise((resolve, reject) => {
-      execFile('git', ['pull', '--ff-only'], {
+      execFile('git', args, {
         cwd: repoRoot,
         timeout: 120000,
         // shell on Windows: git resolves through git.cmd.
@@ -357,11 +373,11 @@ async function devPullUpdate() {
       })
     })
     const output = `${stdout}${stderr}`.trim()
-    log(`[updater] git pull ok: ${output}`)
+    log(`[updater] git pull ok (${hasUpstream ? 'upstream' : 'origin'}): ${output}`)
     dialog.showMessageBox({
       type: 'info',
       title: `${APP_NAME} — updated`,
-      message: 'Pulled the latest harness from the repo.',
+      message: `Pulled the latest harness from ${hasUpstream ? 'the official repo' : 'origin'}.`,
       detail: `${output}\n\nThe app will restart to load the new code.` +
         '\nNote: interface changes may need a rebuild (pnpm build) to appear.',
     })
